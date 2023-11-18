@@ -22,17 +22,15 @@ export default function Home() {
 
   const Card = ({ item }: { item: string }) => {
     return (
-      <div className="border border-slate-500 rounded-lg inline-block p-4">
-        {item}
-      </div>
+      <div className="border border-slate-500 rounded-lg p-4 w-40">{item}</div>
     );
   };
 
   return (
     <main>
-      <div className="text-center mt-8">
+      <div className="text-center mt-8 items-center">
         <h1 className="font-bold text-xl">Cart:</h1>
-        <div className="mt-4">
+        <div className="mt-8 space-y-2 self-center flex flex-col items-center">
           {cart.map((item) => (
             <Card key={item} item={item} />
           ))}
