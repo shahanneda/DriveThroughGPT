@@ -1,5 +1,6 @@
 import base64
 import io
+import json
 import os
 import queue
 import threading
@@ -37,8 +38,9 @@ cam_port = 0
 delay = 5
 
 messages: list[dict[str, str]] = [
+    {"role": "system", "content": 'Your output MUST be a JSON {"customer_response": XXX, "items_in_cart": [X, Y, Z]}'},
     {"role": "user",
-     "content": "You are a McDonald's drive-through operator and are having a conversation with a customer. Only respond as the employee. Your output MUST be a JSON {'user_response': XXX, 'items_in_cart': [XXX]}"}
+     "content": 'You are a McDonalds drive-through. Have a conversation with a customer. The JSON object: \n\n'}
 ]
 
 
@@ -96,9 +98,13 @@ def ask_gpt(user_text: str | None):
     )
 
     print(response)
-    res = str(response.choices[0].message.content)
-    messages.append({"role": "assistant", "content": res})
-    return res
+    res = json.loads(response.choices[0].message.content)
+    user_response = res['customer_response']
+    cart_items = res['items_in_cart']
+    print(cart_items)
+    messages.append({"role": "assistant", "content": user_response})
+    messages.append({"role": "user", "content": """Respond to the customer as a drive-through agent. {"customer_response": XXX, "items_in_cart": [X, Y, Z]}. The JSON object: \n\n"""})
+    return user_response
 
 
 class AudioSource(object):
