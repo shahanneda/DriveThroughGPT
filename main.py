@@ -25,7 +25,7 @@ response = elabs.voices()
 
 obama = None
 for v in response.voices:
-    if v.name == "Obama Better":
+    if v.name == "Morgan Freeman":
         obama = v
 assert (obama)
 print(f"Using {obama.name} voice")
@@ -38,7 +38,7 @@ cam_port = 0
 delay = 5
 
 messages: list[dict[str, str]] = [
-    {"role": "user", "content": "You are a McDonald's drive-through operator and are having a conversation with a customer. Respond to the user only. Do not prepend your response with any text. Respond as if you were in a real conversation with the customer."}
+    {"role": "user", "content": "You are a McDonald's drive-through operator and are having a conversation with a customer. Respond to the user only. Do not prepend your response with any text. Respond as if you were in a real conversation with the customer. Respond in the manner of Morgan Freeman. Add some philosophical thoughts in some replies."}
 ]
 
 
@@ -67,6 +67,7 @@ def encode_image(image_path):
 
 
 def ask_gpt(user_text: str | None):
+    print("Thinking...")
     global messages
     if user_text:
         messages.append({"role": "user", "content": user_text})
