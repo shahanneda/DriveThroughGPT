@@ -17,6 +17,7 @@ pyttsx3 = "^2.90"
 pyaudio = "^0.2.14"
 soundfile = "^0.12.1"
 keyboard = "^0.13.5"
+sounddevice = "^0.4.6"
 
 
 [build-system]

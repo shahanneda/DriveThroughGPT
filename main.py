@@ -172,20 +172,28 @@ def say_eleven_labs(text):
 			break
 		time.sleep(1)
 
-while True:
-		print("Talk to obama: (5 seconds)")
-		try:
+
+# say_eleven_labs("hello one ad sdfjsdfjk sjdfk jskdjfk jsdkfj skdjfk sdjkfjskdjkfdj ksdjfkf one two three four  one two three fou one two three fou one two three fou")
+def reset_file():
 			try:
 				os.removedirs("./stopped")
 			except Exception as e:
 				pass
-			user_inputted_text = get_mic()
-			print("got user texted", user_inputted_text)
 
+reset_file()
+while True:
+		print("Talk to obama: (5 seconds)")
+		try:
+			reset_file()
+			user_inputted_text = get_mic()
+			reset_file()
+
+			print("got user texted", user_inputted_text)
 			print("Asking GPT!")
+
 			text = ask_gpt_img(user_text=user_inputted_text)
 
-			print("got ", text)
+			reset_file()
 			say_eleven_labs(text)
 			# x = input()
 			# time.sleep(delay)
