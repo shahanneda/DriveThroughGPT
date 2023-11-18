@@ -38,7 +38,7 @@ cam_port = 0
 delay = 5
 
 messages: list[dict[str, str]] = [
-    {"role": "system", "content": "You are a McDonald's drive-through operator and are having a conversation with a customer. Only respond as the employee."}
+    {"role": "user", "content": "You are a McDonald's drive-through operator and are having a conversation with a customer. Respond to the user"}
 ]
 
 
@@ -79,7 +79,8 @@ def ask_gpt(user_text: str):
         messages=messages,
         max_tokens=300,
     )
-    res = response.choices[0].message.content
+    res = str(response.choices[0].message.content)
+    messages.append({"role": "assistant", "content": res})
     return res
 
 
