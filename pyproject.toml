@@ -18,6 +18,8 @@ pyaudio = "^0.2.14"
 soundfile = "^0.12.1"
 keyboard = "^0.13.5"
 sounddevice = "^0.4.6"
+fastapi = "^0.104.1"
+uvicorn = "^0.24.0.post1"
 
 
 [build-system]

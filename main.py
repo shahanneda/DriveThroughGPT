@@ -24,10 +24,10 @@ assert (eleven_labs_api_key)
 elabs.set_api_key(eleven_labs_api_key)
 response = elabs.voices()
 
-obama = response.voices[0]
-# for v in response.voices:
-#     if v.name == "Obama Better":
-#         obama = v
+# obama = response.voices[0]
+for v in response.voices:
+    if v.name == "Morgan Freeman":
+        obama = v
 assert (obama)
 print(f"Using {obama.name} voice")
 
@@ -91,6 +91,12 @@ def ask_gpt(user_text: str | None):
     cart_items = res.get('cart_items', ['error'])
     print(cart_items)
     last_response = json.dumps(res)
+
+
+    # Write this to a file called 'cart.txt'
+    with open("cart.txt", "w") as f:
+        f.write("\n".join(cart_items))
+
     return user_response
 
 
