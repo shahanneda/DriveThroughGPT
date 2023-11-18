@@ -28,7 +28,7 @@ for v in response.voices:
     if v.name == "Obama Better":
         obama = v
 assert (obama)
-print(obama)
+print(f"Using {obama.name} voice")
 
 
 client = OpenAI()
@@ -38,7 +38,7 @@ cam_port = 0
 delay = 5
 
 messages: list[dict[str, str]] = [
-    {"role": "user", "content": "You are a McDonald's drive-through operator and are having a conversation with a customer. Respond to the user"}
+    {"role": "user", "content": "You are a McDonald's drive-through operator and are having a conversation with a customer. Respond to the user only. Do not prepend your response with any text. Respond as if you were in a real conversation with the customer."}
 ]
 
 
@@ -66,10 +66,10 @@ def encode_image(image_path):
         return base64.b64encode(image_file.read()).decode('utf-8')
 
 
-def ask_gpt(user_text: str):
+def ask_gpt(user_text: str | None):
     global messages
-    messages.append({"role": "user", "content": user_text})
-    print(messages)
+    if user_text:
+        messages.append({"role": "user", "content": user_text})
 
     # base64_image = encode_image(image_path)
     client = OpenAI()
@@ -144,7 +144,7 @@ def record(source, duration=None, offset=None):
 
             frames.write(buffer)
 
-    print("broke out of thread")
+    # print("broke out of thread")
     frame_data = frames.getvalue()
     frames.close()
     return sr.AudioData(frame_data, source.SAMPLE_RATE, source.SAMPLE_WIDTH)
@@ -152,7 +152,7 @@ def record(source, duration=None, offset=None):
 
 def get_user_transcription():
     init_rec = sr.Recognizer()
-    print("Let's speak!!")
+    print("Please speak: ")
     with sr.Microphone() as source:
         audio_data = record(source)
         print("Recognizing your text.............")
@@ -161,9 +161,9 @@ def get_user_transcription():
 
 
 def say_eleven_labs(text):
-    print("Generating voice...")
+    # print("Generating voice...")
     audio = elabs.generate(voice=obama, text=text)
-    print("Done...")
+    # print("Done...")
     data = sf.read(io.BytesIO(audio))
     sd.play(*data)
 
@@ -183,15 +183,23 @@ def reset_file():
 
 
 reset_file()
+
+print("Talk to obama")
+reset_file()
+
+initial_response = ask_gpt(user_text=None)
+reset_file()
+say_eleven_labs(initial_response)
+
 while True:
-    print("Talk to obama: (5 seconds)")
+
     try:
         reset_file()
         user_inputted_text = get_user_transcription()
         reset_file()
 
-        print("You said", user_inputted_text)
-        print("Asking GPT!")
+        print("You said: ", user_inputted_text)
+        # print("Asking GPT!")
 
         text = ask_gpt(user_text=user_inputted_text)
 
