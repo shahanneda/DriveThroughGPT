@@ -38,6 +38,7 @@ cam_port = 0
 delay = 5
 
 messages: list[dict[str, str]] = [
+    {"role": "user", "content": "You are a McDonald's drive-through operator and are having a conversation with a customer. Respond to the user only. Do not prepend your response with any text. Respond as if you were in a real conversation with the customer. Respond in the manner of Morgan Freeman. Add some philosophical thoughts in some replies."}
     {"role": "system", "content": 'Your output MUST be a JSON {"customer_response": XXX, "items_in_cart": [X, Y, Z]}'},
     {"role": "user",
      "content": 'You are a McDonalds drive-through. Have a conversation with a customer. The JSON object: \n\n'}
@@ -69,6 +70,7 @@ def encode_image(image_path):
 
 
 def ask_gpt(user_text: str | None):
+    print("Thinking...")
     global messages
     if user_text:
         messages.append({"role": "user", "content": user_text})
