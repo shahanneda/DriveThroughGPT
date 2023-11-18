@@ -20,13 +20,23 @@ export default function Home() {
     return () => clearInterval(interval);
   });
 
+  const Card = ({ item }: { item: string }) => {
+    return (
+      <div className="border border-slate-500 rounded-lg inline-block p-4">
+        {item}
+      </div>
+    );
+  };
+
   return (
     <main>
-      Cart:
-      <div>
-        {cart.map((item) => (
-          <div key={item}>{item}</div>
-        ))}
+      <div className="text-center mt-8">
+        <h1 className="font-bold text-xl">Cart:</h1>
+        <div className="mt-4">
+          {cart.map((item) => (
+            <Card key={item} item={item} />
+          ))}
+        </div>
       </div>
     </main>
   );
