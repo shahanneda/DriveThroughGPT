@@ -24,10 +24,10 @@ assert (eleven_labs_api_key)
 elabs.set_api_key(eleven_labs_api_key)
 response = elabs.voices()
 
-obama = response.voices[0]
-# for v in response.voices:
-#     if v.name == "Obama Better":
-#         obama = v
+# obama = response.voices[0]
+for v in response.voices:
+    if v.name == "Morgan Freeman":
+        obama = v
 assert (obama)
 print(f"Using {obama.name} voice")
 
@@ -86,8 +86,14 @@ def ask_gpt(user_text: str | None):
     res = json.loads(response.choices[0].message.content)
     user_response = res['response']
     cart_items = res['cart_items']
+
+    # Write this to a file called 'cart.txt'
+    with open("cart.txt", "w") as f:
+        f.write("\n".join(cart_items))
+
     print(cart_items)
-    messages.append({"role": "assistant", "content": f"""Your response: {user_response}.\n Respond in the manner of MORGAN FREEMAN. Add philosophical thoughts. {{"response": XXX, "cart_items": [X, Y, Z]}}. The JSON object: \n"""})
+    messages.append(
+        {"role": "assistant", "content": f"""Your response: {user_response}.\n Respond in the manner of MORGAN FREEMAN. Add philosophical thoughts. {{"response": XXX, "cart_items": [X, Y, Z]}}. The JSON object: \n"""})
     return user_response
 
 
