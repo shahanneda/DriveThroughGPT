@@ -38,7 +38,7 @@ cam_port = 0
 delay = 5
 
 messages: list[dict[str, str]] = [
-    {"role": "user", "content": """You are a McDonald's drive-through operator and are having a conversation with a customer. Respond as if you were in a real conversation with the customer. Respond in the manner of MORGAN FREEMAN. Add some philosophical thoughts in some replies.\n Output format: {"response": XXX, "cart_items": []}.\n JSON object: \n\n"""}
+    {"role": "user", "content": """You are a McDonald's drive-through operator and are having a conversation with a customer. Respond as if you were in a real conversation with the customer. Respond in the manner of MORGAN FREEMAN. Add some philosophical thoughts in some replies.\n Output format: {"response": XXX, "cart_items": []}.\n JSON object: \n"""}
 ]
 
 
@@ -66,11 +66,14 @@ def encode_image(image_path):
         return base64.b64encode(image_file.read()).decode('utf-8')
 
 
+last_response = ""
 def ask_gpt(user_text: str | None):
     print("Thinking...")
-    global messages
+    global messages, last_response
     if user_text:
-        messages.append({"role": "user", "content": user_text})
+        messages.append({"role": "assistant",
+                         "content": f"""Your response: {last_response}.\nUser replied: {user_text}.\n Respond like MORGAN FREEMAN. Add some philosophical thoughts. {{"response": XXX, "cart_items": [X, Y, Z]}}. The JSON object: \n\n"""})
+
 
     # base64_image = encode_image(image_path)
     client = OpenAI()
@@ -85,9 +88,9 @@ def ask_gpt(user_text: str | None):
     print(response)
     res = json.loads(response.choices[0].message.content)
     user_response = res['response']
-    cart_items = res['cart_items']
+    cart_items = res.get('cart_items', ['error'])
     print(cart_items)
-    messages.append({"role": "assistant", "content": f"""Your response: {user_response}.\n Respond in the manner of MORGAN FREEMAN. Add philosophical thoughts. {{"response": XXX, "cart_items": [X, Y, Z]}}. The JSON object: \n"""})
+    last_response = json.dumps(res)
     return user_response
 
 
