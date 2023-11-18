@@ -1,10 +1,9 @@
 import os
-import uvicorn
 
+import uvicorn
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-from dotenv import load_dotenv
 from google_images_search import GoogleImagesSearch
 
 load_dotenv()
@@ -33,6 +32,7 @@ app.add_middleware(
 
 cached_images = {}
 
+
 def get_image(name):
     if name in cached_images:
         return cached_images[name]
@@ -45,6 +45,7 @@ def get_image(name):
     for image in gis.results():
         cached_images[name] = image.url
         return image.url
+
 
 @app.get("/cart")
 async def read_cart():

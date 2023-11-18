@@ -8,6 +8,11 @@ const getCart = async () => {
   return data.items;
 };
 
+interface Item {
+  name: string;
+  url: string;
+}
+
 export default function Home() {
   const [cart, setCart] = useState<string[]>([]);
 
@@ -20,9 +25,12 @@ export default function Home() {
     return () => clearInterval(interval);
   });
 
-  const Card = ({ item }: { item: string }) => {
+  const Card = ({ item }: { item: Item }) => {
     return (
-      <div className="border border-slate-500 rounded-lg p-4 w-40">{item}</div>
+      <div className="border border-slate-500 rounded-lg p-4 w-40">
+        {item.name}
+        <img src={item.url} alt="item" />
+      </div>
     );
   };
 

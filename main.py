@@ -54,7 +54,9 @@ def encode_image(image_path):
 
 
 last_response = ""
-yes_philosophy = False
+yes_philosophy = True
+
+
 def ask_gpt(user_text: str | None):
     print("Thinking...")
     global messages, last_response, yes_philosophy
@@ -63,11 +65,10 @@ def ask_gpt(user_text: str | None):
         if yes_philosophy:
             philosophy_text = "Add philosophical thoughts in the manner of Morgan Freeman."
 
-        yes_philosophy = not yes_philosophy
+        # yes_philosophy = not yes_philosophy
 
         messages.append({"role": "assistant",
                          "content": f"""Last response: {last_response}.\nUser replied: {user_text}.\n Respond like MORGAN FREEMAN. {philosophy_text} Be concise. {{"response": XXX, "cart_items": [X, Y, Z]}}. The JSON object: \n\n"""})
-
 
     # base64_image = encode_image(image_path)
     client = OpenAI()
@@ -85,7 +86,6 @@ def ask_gpt(user_text: str | None):
     cart_items = res.get('cart_items', ['error'])
     print(cart_items)
     last_response = json.dumps(res)
-
 
     # Write this to a file called 'cart.txt'
     with open("cart.txt", "w") as f:
