@@ -38,10 +38,7 @@ cam_port = 0
 delay = 5
 
 messages: list[dict[str, str]] = [
-    {"role": "user", "content": "You are a McDonald's drive-through operator and are having a conversation with a customer. Respond to the user only. Do not prepend your response with any text. Respond as if you were in a real conversation with the customer. Respond in the manner of Morgan Freeman. Add some philosophical thoughts in some replies."}
-    {"role": "system", "content": 'Your output MUST be a JSON {"customer_response": XXX, "items_in_cart": [X, Y, Z]}'},
-    {"role": "user",
-     "content": 'You are a McDonalds drive-through. Have a conversation with a customer. The JSON object: \n\n'}
+    {"role": "user", "content": """You are a McDonald's drive-through operator and are having a conversation with a customer. Respond as if you were in a real conversation with the customer. Respond in the manner of MORGAN FREEMAN. Add some philosophical thoughts in some replies.\n Output format: {"response": XXX, "cart_items": []}.\n JSON object: \n\n"""}
 ]
 
 
@@ -79,33 +76,18 @@ def ask_gpt(user_text: str | None):
     client = OpenAI()
     response = client.chat.completions.create(
         # model="gpt-4-vision-preview",
-        model="gpt-3.5-turbo",
+        response_format={"type": "json_object"},
+        model="gpt-3.5-turbo-1106",
         messages=messages,
-        # functions=[
-        #     {"name": "add_food_item", "description": "Adds a food item that the user wants to get",
-        #      "parameters": {
-        #          "type": "object",
-        #          "properties":
-        #              {"name": {
-        #                  "type": "string",
-        #                  "description": "The name of the food item"
-        #              },
-        #                  "quantity": {
-        #                      "type": "integer",
-        #                      "description": "How many items the user wants"
-        #                  }}
-        #      }}
-        # ],
         max_tokens=300,
     )
 
     print(response)
     res = json.loads(response.choices[0].message.content)
-    user_response = res['customer_response']
-    cart_items = res['items_in_cart']
+    user_response = res['response']
+    cart_items = res['cart_items']
     print(cart_items)
-    messages.append({"role": "assistant", "content": user_response})
-    messages.append({"role": "user", "content": """Respond to the customer as a drive-through agent. {"customer_response": XXX, "items_in_cart": [X, Y, Z]}. The JSON object: \n\n"""})
+    messages.append({"role": "assistant", "content": f"""Your response: {user_response}.\n Respond in the manner of MORGAN FREEMAN. Add philosophical thoughts. {{"response": XXX, "cart_items": [X, Y, Z]}}. The JSON object: \n"""})
     return user_response
 
 
@@ -233,5 +215,5 @@ while True:
         # x = input()
         # time.sleep(delay)
     except Exception as e:
-        print(e)
+        print("ERROR", e)
         continue
