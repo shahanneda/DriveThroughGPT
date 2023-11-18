@@ -23,13 +23,12 @@ assert (eleven_labs_api_key)
 elabs.set_api_key(eleven_labs_api_key)
 response = elabs.voices()
 
-obama = None
-for v in response.voices:
-    if v.name == "Obama Better":
-        obama = v
+obama = response.voices[0]
+# for v in response.voices:
+#     if v.name == "Obama Better":
+#         obama = v
 assert (obama)
 print(f"Using {obama.name} voice")
-
 
 client = OpenAI()
 folder = "images"
@@ -38,7 +37,8 @@ cam_port = 0
 delay = 5
 
 messages: list[dict[str, str]] = [
-    {"role": "user", "content": "You are a McDonald's drive-through operator and are having a conversation with a customer. Respond to the user only. Do not prepend your response with any text. Respond as if you were in a real conversation with the customer."}
+    {"role": "user",
+     "content": "You are a McDonald's drive-through operator and are having a conversation with a customer. Only respond as the employee. Your output MUST be a JSON {'user_response': XXX, 'items_in_cart': [XXX]}"}
 ]
 
 
@@ -77,8 +77,25 @@ def ask_gpt(user_text: str | None):
         # model="gpt-4-vision-preview",
         model="gpt-3.5-turbo",
         messages=messages,
+        # functions=[
+        #     {"name": "add_food_item", "description": "Adds a food item that the user wants to get",
+        #      "parameters": {
+        #          "type": "object",
+        #          "properties":
+        #              {"name": {
+        #                  "type": "string",
+        #                  "description": "The name of the food item"
+        #              },
+        #                  "quantity": {
+        #                      "type": "integer",
+        #                      "description": "How many items the user wants"
+        #                  }}
+        #      }}
+        # ],
         max_tokens=300,
     )
+
+    print(response)
     res = str(response.choices[0].message.content)
     messages.append({"role": "assistant", "content": res})
     return res
