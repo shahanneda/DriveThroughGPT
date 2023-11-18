@@ -4,6 +4,8 @@ import base64
 import os
 from dotenv import load_dotenv
 import elevenlabs as elabs
+import speech_recognition as sr
+import pyaudio
 
 load_dotenv()  
 
@@ -51,7 +53,7 @@ def encode_image(image_path):
 	with open(image_path, "rb") as image_file:
 		return base64.b64encode(image_file.read()).decode('utf-8')
 
-def ask_gpt_img():
+def ask_gpt_img(user_text):
 	base64_image = encode_image(image_path)
 	client = OpenAI()
 	response = client.chat.completions.create(
@@ -60,7 +62,7 @@ def ask_gpt_img():
 			{
 				"role": "user",
 				"content": [
-					{"type": "text", "text": "What’s in this image? Answer in a way obama would answer, in one sentance. Do not use let me clear at all times."},
+					{"type": "text", "text": f"Let's have a friendly conversation. I am the person in the image. First: {user_text}. "},
 					{
 						"type": "image_url",
 						"image_url": {
@@ -77,6 +79,16 @@ def ask_gpt_img():
 
 
 
+
+def get_mic(duration=5):
+	init_rec = sr.Recognizer()
+	print("Let's speak!!")
+	with sr.Microphone() as source:
+			audio_data = init_rec.record(source, duration=duration)
+			print("Recognizing your text.............")
+			text = init_rec.recognize_google(audio_data)
+			return text
+
 def say_eleven_labs(text):
 	audio = elabs.generate(voice=obama, text=text)
 	elabs.play(audio)
@@ -84,11 +96,21 @@ def say_eleven_labs(text):
 # say_eleven_labs()
 
 while True:
-		print("Asking GPT!")
-		text = ask_gpt_img()
-		print("got ", text)
-		say_eleven_labs(text)
-		time.sleep(delay)
+		print("Talk to obama: (5 seconds)")
+		try: 
+			user_inputted_text = get_mic()
+			print(user_inputted_text)
+
+			print("Asking GPT!")
+			text = ask_gpt_img(user_text=user_inputted_text)
+
+			print("got ", text)
+			say_eleven_labs(text)
+
+			time.sleep(delay)
+		except Exception as e:
+			continue
+
 
 
 print(response.choices[0])
