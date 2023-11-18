@@ -20,6 +20,7 @@ keyboard = "^0.13.5"
 sounddevice = "^0.4.6"
 fastapi = "^0.104.1"
 uvicorn = "^0.24.0.post1"
+google-images-search = "^1.4.6"
 
 
 [build-system]
