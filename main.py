@@ -14,8 +14,9 @@ import elevenlabs as elabs
 import speech_recognition as sr
 
 load_dotenv()  
-
 eleven_labs_api_key = os.environ.get('ELEVEN_LABS_API_KEY')
+wit_api_key = os.environ.get("WIT_API_KEY")
+
 # Setup eleven labs
 assert (eleven_labs_api_key)
 elabs.set_api_key(eleven_labs_api_key)
@@ -59,18 +60,20 @@ def ask_gpt_img(user_text):
 	base64_image = encode_image(image_path)
 	client = OpenAI()
 	response = client.chat.completions.create(
-		model="gpt-4-vision-preview",
+		model="gpt-3.5-turbo",
+		# model="gpt-4-vision-preview",
 		messages=[
 			{
 				"role": "user",
 				"content": [
-					{"type": "text", "text": f"Let's have a friendly conversation. I am the person in the image. First: {user_text}. "},
-					{
-						"type": "image_url",
-						"image_url": {
-							"url": f"data:image/jpeg;base64,{base64_image}"
-						},
-					},
+					{"type": "text", "text": f"You are a McDonalds woker at a drive through. "},
+					# {"type": "text", "text": f"Let's have a friendly conversation. I am the person in the image. First: {user_text}. "},
+					# {
+					# 	"type": "image_url",
+					# 	"image_url": {
+					# 		"url": f"data:image/jpeg;base64,{base64_image}"
+					# 	},
+					# },
 				],
 			}
 		],
@@ -152,6 +155,7 @@ def get_mic(duration=5):
 	with sr.Microphone() as source:
 			audio_data = record(source)
 			print("Recognizing your text.............")
+			# text = init_rec.recognize_wit(audio_data, key=wit_api_key) 
 			text = init_rec.recognize_google(audio_data)
 			return text
 
@@ -192,6 +196,7 @@ while True:
 			print("Asking GPT!")
 
 			text = ask_gpt_img(user_text=user_inputted_text)
+			print(text)
 
 			reset_file()
 			say_eleven_labs(text)
