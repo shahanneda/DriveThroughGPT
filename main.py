@@ -25,9 +25,13 @@ elabs.set_api_key(eleven_labs_api_key)
 response = elabs.voices()
 
 # obama = response.voices[0]
+obama = None
 for v in response.voices:
     if v.name == "Morgan Freeman":
         obama = v
+if obama is None:
+    obama = response.voices[0]
+
 assert (obama)
 print(f"Using {obama.name} voice")
 
@@ -38,28 +42,9 @@ cam_port = 0
 delay = 5
 
 messages: list[dict[str, str]] = [
-    {"role": "user", "content": """You are a McDonald's drive-through operator and are having a conversation with a customer. Respond as if you were in a real conversation with the customer. Respond in the manner of MORGAN FREEMAN. Add some philosophical thoughts in some replies.\n Output format: {"response": XXX, "cart_items": []}.\n JSON object: \n"""}
+    {"role": "user", "content": """You are a McDonald's drive-through operator and are having a conversation with a customer. Respond as if you were in a real conversation with the customer. Respond in the manner of MORGAN FREEMAN. \n Output format: {"response": XXX, "cart_items": []}.\n JSON object: \n"""}
 ]
 
-
-# response = client.chat.completions.create(
-#   model="gpt-4-vision-preview",
-#   messages=[
-#     {
-#       "role": "user",
-#       "content": [
-#         {"type": "text", "text": "What’s in this image?"},
-#         {
-#           "type": "image_url",
-#           "image_url": {
-#             "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg",
-#           },
-#         },
-#       ],
-#     }
-#   ],
-#   max_tokens=300,
-# )
 
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
@@ -67,12 +52,19 @@ def encode_image(image_path):
 
 
 last_response = ""
+yes_philosophy = False
 def ask_gpt(user_text: str | None):
     print("Thinking...")
-    global messages, last_response
+    global messages, last_response, yes_philosophy
     if user_text:
+        philosophy_text = ""
+        if yes_philosophy:
+            philosophy_text = "Add philosophical thoughts in the manner of Morgan Freeman."
+
+        yes_philosophy = not yes_philosophy
+
         messages.append({"role": "assistant",
-                         "content": f"""Your response: {last_response}.\nUser replied: {user_text}.\n Respond like MORGAN FREEMAN. Add some philosophical thoughts. {{"response": XXX, "cart_items": [X, Y, Z]}}. The JSON object: \n\n"""})
+                         "content": f"""Last response: {last_response}.\nUser replied: {user_text}.\n Respond like MORGAN FREEMAN. {philosophy_text} Be concise. {{"response": XXX, "cart_items": [X, Y, Z]}}. The JSON object: \n\n"""})
 
 
     # base64_image = encode_image(image_path)
@@ -190,7 +182,6 @@ def say_eleven_labs(text):
         time.sleep(1)
 
 
-# say_eleven_labs("hello one ad sdfjsdfjk sjdfk jskdjfk jsdkfj skdjfk sdjkfjskdjkfdj ksdjfkf one two three four  one two three fou one two three fou one two three fou")
 def reset_file():
     try:
         os.removedirs("./stopped")
