@@ -1,11 +1,17 @@
+import queue
+import threading
 import time
+import io
+
+import sounddevice as sd
+import soundfile as sf
+import speech_recognition
 from openai import OpenAI
 import base64
 import os
 from dotenv import load_dotenv
 import elevenlabs as elabs
 import speech_recognition as sr
-import pyaudio
 
 load_dotenv()  
 
@@ -14,12 +20,7 @@ eleven_labs_api_key = os.environ.get('ELEVEN_LABS_API_KEY')
 assert (eleven_labs_api_key)
 elabs.set_api_key(eleven_labs_api_key)
 response = elabs.voices()
-obama = None
-print(response.voices)
-for v in response.voices:
-		if v.name == "Shahan 1":
-				obama = v
-
+obama = response.voices[0]
 assert (obama)
 print(obama)
 
@@ -119,7 +120,7 @@ def record(source, duration=None, offset=None):
 
 				# try:  # used try so that if user pressed other than the given key error will not be shown
 				# i += 1
-				# 	if keyboard.is_pressed('q'):  # if key 'q' is pressed 
+				# 	if keyboard.is_pressed('q'):  # if key 'q' is pressed
 				# 			print('You Pressed A Key!')
 				# 			break  # finishing the loop
 				# except:
@@ -159,13 +160,17 @@ import wave
 import wave
 
 def say_eleven_labs(text):
+	print("Generating voice...")
 	audio = elabs.generate(voice=obama, text=text)
-	elabs.play(audio)
+	print("Done...")
+	data = sf.read(io.BytesIO(audio))
+	sd.play(*data)
 
-# say_eleven_labs()
-
-# say_eleven_labs("Hello how are you")
-print(os.path.isdir("./stopped"))
+	while True:
+		if os.path.isdir("./stopped"):
+			sd.stop()
+			break
+		time.sleep(1)
 
 while True:
 		print("Talk to obama: (5 seconds)")
@@ -188,6 +193,3 @@ while True:
 			print(e)
 			continue
 
-
-
-print(response.choices[0])

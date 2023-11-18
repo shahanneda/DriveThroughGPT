@@ -368,20 +368,6 @@ qa = ["flake8 (==5.0.4)", "mypy (==0.971)", "types-setuptools (==67.2.0.1)"]
 testing = ["Django", "attrs", "colorama", "docopt", "pytest (<7.0.0)"]
 
 [[package]]
-name = "keyboard"
-version = "0.13.5"
-description = "Hook and simulate keyboard events on Windows and Linux"
-optional = false
-python-versions = "*"
-files = [
-    {file = "keyboard-0.13.5-py3-none-any.whl", hash = "sha256:8e9c2422f1217e0bd84489b9ecd361027cc78415828f4fe4f88dd4acd587947b"},
-    {file = "keyboard-0.13.5.zip", hash = "sha256:63ed83305955939ca5c9a73755e5cc43e8242263f5ad5fd3bb7e0b032f3d308b"},
-]
-
-[package.dependencies]
-pyobjc = {version = "*", markers = "sys_platform == \"darwin\""}
-
-[[package]]
 name = "matplotlib-inline"
 version = "0.1.6"
 description = "Inline Matplotlib backend for Jupyter"
@@ -3752,4 +3738,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "840486b9194a2b0dcb36c6ea9a016e6d5cc86f99fe9f6172eadf5b1dd329b528"
+content-hash = "d39a4b287856e692c5da17c9c74fb8e2f2d822bce692166c5e7a65cef430555c"

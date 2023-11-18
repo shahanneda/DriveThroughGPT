@@ -15,6 +15,7 @@ elevenlabs = "^0.2.26"
 speechrecognition = "^3.10.0"
 pyttsx3 = "^2.90"
 pyaudio = "^0.2.14"
+soundfile = "^0.12.1"
 keyboard = "^0.13.5"
 
 
