@@ -10,12 +10,12 @@ import wave
 from typing import Iterator
 
 import elevenlabs as elabs
-from elevenlabs import generate
 import sounddevice as sd
 import soundfile as sf
 import speech_recognition
 import speech_recognition as sr
 from dotenv import load_dotenv
+from elevenlabs import generate
 from openai import OpenAI
 
 load_dotenv()
@@ -68,7 +68,6 @@ last_response = ""
 yes_philosophy = True
 
 
-
 def stream(audio_stream: Iterator[bytes]):
     mpv_command = ["mpv", "--no-cache", "--no-terminal", "--", "fd://0"]
     mpv_process = subprocess.Popen(
@@ -101,7 +100,6 @@ def stream(audio_stream: Iterator[bytes]):
         time.sleep(0.2)
 
 
-
 def ask_gpt(user_text: str | None):
     print("Thinking...")
     global messages, last_response, yes_philosophy
@@ -114,6 +112,7 @@ def ask_gpt(user_text: str | None):
                          "content": f"""Last response: {last_response}.\nUser replied: {user_text}.\n Respond like {person}. {philosophy_text} and be funny. Be very philosophical. Makes jokes, use swear words. You can insult the user. Be mean, be ironic, be sarcastic. Above all be funny but still be philosophical. {{"response": XXX, "cart_items": [X, Y, Z]}}. JSON object: {{"response":"""})
 
     response_raw = ""
+
     def yield_chunk_response():
         nonlocal response_raw
 
@@ -123,7 +122,7 @@ def ask_gpt(user_text: str | None):
             model="gpt-3.5-turbo-1106",
             messages=messages,
             max_tokens=300,
-            stream = True
+            stream=True
         ):
             delta = chunk.choices[0].delta.content
 
@@ -141,7 +140,8 @@ def ask_gpt(user_text: str | None):
 
     audio_stream = generate(
         text=yield_chunk_response(),
-        stream=True
+        stream=True,
+        voice=obama
     )
 
     print("Streaming...")
@@ -230,12 +230,14 @@ def record(source, duration=None, offset=None):
 
 
 init_rec = sr.Recognizer()
+
+
 def get_user_transcription():
     print("Please speak: ")
     with sr.Microphone() as source:
         audio_data = record(source)
         print("Recognizing your text.............")
-        text = init_rec.recognize_whisper(audio_data)
+        text = init_rec.recognize_google(audio_data)
         return str(text)
 
 
