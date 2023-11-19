@@ -3,12 +3,14 @@ import io
 import json
 import os
 import queue
+import subprocess
 import threading
 import time
 import wave
+from typing import Iterator
 
 import elevenlabs as elabs
-import keyboard  # using module keyboard
+from elevenlabs import generate
 import sounddevice as sd
 import soundfile as sf
 import speech_recognition
@@ -17,6 +19,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 load_dotenv()
+client = OpenAI()
 
 eleven_labs_api_key = os.environ.get('ELEVEN_LABS_API_KEY')
 wit_api_key = os.environ.get("WIT_API_KEY")
@@ -32,6 +35,7 @@ with open("person.txt", "r") as file:
 
 # person = "Morgan Freeman"
 # person = "Elon Musk"
+person = "Donald Trump"
 
 # obama = response.voices[0]
 obama = None
@@ -51,7 +55,7 @@ cam_port = 0
 delay = 5
 
 messages: list[dict[str, str]] = [
-    {"role": "user", "content": f"""You are a McDonald's drive-through operator and are having a conversation with a customer. Respond as if you were in a real conversation with the customer. Respond in the manner of {person}. Introduce yourself. Makes jokes, use swear words. You can insult the user. Be mean, be ironic, be sarcastic. Above all be funny. \n Output format: {{"response": XXX, "cart_items": []}}.\n JSON object: \n"""}
+    {"role": "user", "content": f"""You are {person} and a McDonald's drive-through operator and are having a conversation with a customer. Respond as if you were in a real conversation with the customer. Respond in the manner of {person}. Introduce yourself. Makes jokes, use swear words. You can insult the user. Be mean, be ironic, be sarcastic. Above all be funny. Include "don't waste my time". \n Output format: {{"response": XXX, "cart_items": []}}.\n JSON object: {{"response":"""}
 ]
 
 
@@ -64,6 +68,40 @@ last_response = ""
 yes_philosophy = True
 
 
+
+def stream(audio_stream: Iterator[bytes]):
+    mpv_command = ["mpv", "--no-cache", "--no-terminal", "--", "fd://0"]
+    mpv_process = subprocess.Popen(
+        mpv_command,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+    audio = b""
+
+    for chunk in audio_stream:
+        if chunk is not None:
+            mpv_process.stdin.write(chunk)  # type: ignore
+            mpv_process.stdin.flush()  # type: ignore
+            audio += chunk
+        if os.path.isdir("./stopped"):
+            mpv_process.kill()
+            return
+
+    if mpv_process.stdin:
+        mpv_process.stdin.close()
+
+    while True:  # loop for the total number of chunks needed
+        # print("in loop")
+        if os.path.isdir("./stopped"):
+            mpv_process.kill()
+            return
+
+        time.sleep(0.2)
+
+
+
 def ask_gpt(user_text: str | None):
     print("Thinking...")
     global messages, last_response, yes_philosophy
@@ -72,23 +110,46 @@ def ask_gpt(user_text: str | None):
         if yes_philosophy:
             philosophy_text = f"Respond jokingly in the style of {person}."
 
-        # yes_philosophy = not yes_philosophy
-
         messages.append({"role": "assistant",
-                         "content": f"""Last response: {last_response}.\nUser replied: {user_text}.\n Respond like {person}. {philosophy_text} and be funny. Be very philosophical. Makes jokes, use swear words. You can insult the user. Be mean, be ironic, be sarcastic. Above all be funny but still be philosophical. {{"response": XXX, "cart_items": [X, Y, Z]}}. The JSON object: \n\n"""})
+                         "content": f"""Last response: {last_response}.\nUser replied: {user_text}.\n Respond like {person}. {philosophy_text} and be funny. Be very philosophical. Makes jokes, use swear words. You can insult the user. Be mean, be ironic, be sarcastic. Above all be funny but still be philosophical. {{"response": XXX, "cart_items": [X, Y, Z]}}. JSON object: {{"response":"""})
 
-    # base64_image = encode_image(image_path)
-    client = OpenAI()
-    response = client.chat.completions.create(
-        # model="gpt-4-vision-preview",
-        response_format={"type": "json_object"},
-        model="gpt-3.5-turbo-1106",
-        messages=messages,
-        max_tokens=300,
+    response_raw = ""
+    def yield_chunk_response():
+        nonlocal response_raw
+
+        for chunk in client.chat.completions.create(
+            # model="gpt-4-vision-preview",
+            response_format={"type": "json_object"},
+            model="gpt-3.5-turbo-1106",
+            messages=messages,
+            max_tokens=300,
+            stream = True
+        ):
+            delta = chunk.choices[0].delta.content
+
+            if os.path.isdir("./stopped"):
+                return
+            if delta is None:
+                return
+            else:
+                response_raw += delta
+
+                if len(response_raw) >= 14:
+                    yield delta
+                else:
+                    print(response_raw)
+
+    audio_stream = generate(
+        text=yield_chunk_response(),
+        stream=True
     )
 
-    print(response)
-    res = json.loads(response.choices[0].message.content)
+    print("Streaming...")
+
+    stream(audio_stream)
+    print("Done streaming...")
+
+    res = json.loads(response_raw)
     user_response = res['response']
     cart_items = res.get('cart_items', ['error'])
     print(cart_items)
@@ -98,6 +159,7 @@ def ask_gpt(user_text: str | None):
     with open("cart.txt", "w") as f:
         f.write("\n".join(cart_items))
 
+    print("Done ask_gpt1")
     return user_response
 
 
@@ -167,13 +229,13 @@ def record(source, duration=None, offset=None):
     return sr.AudioData(frame_data, source.SAMPLE_RATE, source.SAMPLE_WIDTH)
 
 
+init_rec = sr.Recognizer()
 def get_user_transcription():
-    init_rec = sr.Recognizer()
     print("Please speak: ")
     with sr.Microphone() as source:
         audio_data = record(source)
         print("Recognizing your text.............")
-        text = init_rec.recognize_google(audio_data)
+        text = init_rec.recognize_whisper(audio_data)
         return str(text)
 
 
@@ -205,10 +267,8 @@ reset_file()
 
 initial_response = ask_gpt(user_text=None)
 reset_file()
-say_eleven_labs(initial_response)
 
 while True:
-
     try:
         reset_file()
         user_inputted_text = get_user_transcription()
@@ -218,9 +278,9 @@ while True:
         # print("Asking GPT!")
 
         text = ask_gpt(user_text=user_inputted_text)
+        print("Done ask_gpt")
 
         reset_file()
-        say_eleven_labs(text)
         # x = input()
         # time.sleep(delay)
     except Exception as e:
