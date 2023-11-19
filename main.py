@@ -174,16 +174,12 @@ class AudioSource(object):
         raise NotImplementedError("this is an abstract class")
 
 
-i = 0
-
-
 def record(source, duration=None, offset=None):
-    global i
     """
-		Records up to ``duration`` seconds of audio from ``source`` (an ``AudioSource`` instance) starting at ``offset`` (or at the beginning if not specified) into an ``AudioData`` instance, which it returns.
+                Records up to ``duration`` seconds of audio from ``source`` (an ``AudioSource`` instance) starting at ``offset`` (or at the beginning if not specified) into an ``AudioData`` instance, which it returns.
 
-		If ``duration`` is not specified, then it will record until there is no more audio input.
-		"""
+                If ``duration`` is not specified, then it will record until there is no more audio input.
+                """
     # assert isinstance(source, AudioSource), "Source must be an audio source"
     # assert source.stream is not None, "Audio source must be entered before recording, see documentation for ``AudioSource``; are you using ``source`` outside of a ``with`` statement?"
 
