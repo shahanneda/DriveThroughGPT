@@ -112,16 +112,21 @@ def ask_gpt(user_text: str | None):
             philosophy_text = f"Respond jokingly in the style of {person}."
 
         messages.append({"role": "assistant",
-                         "content": f"""Last response: {last_response}.\nUser replied: {user_text}.\n Respond like {person}. {philosophy_text} and be funny. Be very philosophical. Makes jokes, use swear words. You can insult the user. Be mean, be ironic, be sarcastic. Above all be funny but still be philosophical. {{"response": XXX, "cart_items": [X, Y, Z]}}. JSON object: {{"response":"""})
+                         "content": f"""Last response: {last_response}.\nUser replied: {user_text}.\n Respond like {person}. {philosophy_text} and be funny. Be very philosophical. Makes jokes, use swear words. You can insult the user. Be mean, be ironic, be sarcastic. Above all be funny but still be philosophical. Make sure to include the cart items as json. {{"response": XXX, "cart_items": [X, Y, Z]}}. JSON object: {{"response":"""})
 
     response_raw = ""
     is_done_json_prefix = False
     is_at_cart_items = False
+    user_response = ""
 
     def yield_chunk_response():
         nonlocal response_raw
         nonlocal is_done_json_prefix
         nonlocal is_at_cart_items
+        global last_response
+        global cart_items
+        nonlocal user_response
+
         should_not_talk = False
 
         # if not is_done_prefix and response_raw.startswith("Done"):
@@ -130,7 +135,7 @@ def ask_gpt(user_text: str | None):
                 response_format={"type": "json_object"},
                 model="gpt-3.5-turbo-1106",
                 messages=messages,
-                max_tokens=400,
+                max_tokens=500,
                 stream=True
         ):
             if not is_done_json_prefix and '{"response":' in response_raw:
@@ -145,6 +150,20 @@ def ask_gpt(user_text: str | None):
             if os.path.isdir("./stopped"):
                 should_not_talk = True
             if delta is None:
+                print("raw", response_raw)
+                res = json.loads(response_raw)
+                user_response = res['response']
+
+                print(user_response)
+                print("old cart items:", cart_items)
+                cart_items = res.get('cart_items', cart_items)
+                print("cart items are", cart_items)
+
+                last_response = json.dumps(res)
+                # Write this to a file called 'cart.txt'
+                with open("cart.txt", "w") as f:
+                    f.write("\n".join(cart_items))
+
                 return
             else:
                 response_raw += delta
@@ -152,32 +171,18 @@ def ask_gpt(user_text: str | None):
                 if is_done_json_prefix and not should_not_talk and not is_at_cart_items:
                     yield delta
 
+
     audio_stream = generate(
         text=yield_chunk_response(),
         stream=True,
         voice=obama,
     )
-
-    print("Streaming...")
     stream(audio_stream)
+    print("Streaming...")
     print("Done streaming...")
 
-    print("raw", response_raw)
-    res = json.loads(response_raw)
-    user_response = res['response']
-    print(user_response)
-
-
-    cart_items = res.get('cart_items', cart_items)
-
-    print(cart_items)
-    last_response = json.dumps(res)
-
-    # Write this to a file called 'cart.txt'
-    with open("cart.txt", "w") as f:
-        f.write("\n".join(cart_items))
-
     print("Done ask_gpt1")
+
     return user_response
 
 
