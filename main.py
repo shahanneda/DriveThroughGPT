@@ -1,5 +1,6 @@
 import base64
 import io
+import json
 import os
 import subprocess
 import time
@@ -97,27 +98,7 @@ def stream(audio_stream: Iterator[bytes]):
 
         time.sleep(0.2)
 
-def yield_chunk_response():
-    response_raw = ""
 
-    for chunk in client.chat.completions.create(
-        response_format={"type": "json_object"},
-        model="gpt-3.5-turbo-1106",
-        messages=messages,
-        max_tokens=300,
-        stream = True
-    ):
-        delta = chunk.choices[0].delta.content
-
-        if os.path.isdir("./stopped"):
-            return response_raw
-        if delta is None:
-            return response_raw
-        else:
-            response_raw += delta
-
-            if len(response_raw) >= 14:
-                yield delta
 def ask_gpt(user_text: str | None):
     print("Thinking...")
     global messages, last_response, yes_philosophy
@@ -128,6 +109,29 @@ def ask_gpt(user_text: str | None):
 
         messages.append({"role": "assistant",
                          "content": f"""Last response: {last_response}.\nUser replied: {user_text}.\n Respond like {person}. {philosophy_text} and be funny. Be very philosophical. Makes jokes, use swear words. You can insult the user. Be mean, be ironic, be sarcastic. Above all be funny but still be philosophical. {{"response": XXX, "cart_items": [X, Y, Z]}}. JSON object: {{"response":"""})
+
+    response_raw = ""
+    def yield_chunk_response():
+        nonlocal response_raw
+
+        for chunk in client.chat.completions.create(
+                response_format={"type": "json_object"},
+                model="gpt-3.5-turbo-1106",
+                messages=messages,
+                max_tokens=300,
+                stream=True
+        ):
+            delta = chunk.choices[0].delta.content
+
+            if os.path.isdir("./stopped"):
+                return response_raw
+            if delta is None:
+                return response_raw
+            else:
+                response_raw += delta
+
+                if len(response_raw) >= 14:
+                    yield delta
 
     audio_stream = generate(
         text=yield_chunk_response(),
@@ -140,17 +144,18 @@ def ask_gpt(user_text: str | None):
     stream(audio_stream)
     print("Done streaming...")
 
-    # res = json.loads(response_raw)
-    # user_response = res['response']
-    # cart_items = res.get('cart_items', ['error'])
-    # print(cart_items)
-    # last_response = json.dumps(res)
+    res = json.loads(response_raw)
+    user_response = res['response']
+    cart_items = res.get('cart_items', ['error'])
+    print(cart_items)
+    last_response = json.dumps(res)
 
     # Write this to a file called 'cart.txt'
-    # with open("cart.txt", "w") as f:
-    #     f.write("\n".join(cart_items))
+    with open("cart.txt", "w") as f:
+        f.write("\n".join(cart_items))
 
     print("Done ask_gpt1")
+    return user_response
 
 
 class AudioSource(object):
