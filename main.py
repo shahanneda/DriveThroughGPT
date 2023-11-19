@@ -112,7 +112,7 @@ def ask_gpt(user_text: str | None):
             philosophy_text = f"Respond jokingly in the style of {person}."
 
         messages.append({"role": "assistant",
-                         "content": f"""Last response: {last_response}.\nUser replied: {user_text}.\n Respond like {person}. {philosophy_text} and be funny. Be very philosophical. Makes jokes, use swear words. You can insult the user. Be mean, be ironic, be sarcastic. Above all be funny but still be philosophical. Make sure to include the cart items as json. {{"response": XXX, "cart_items": [X, Y, Z]}}. JSON object: {{"response":"""})
+                         "content": f"""Last response: {last_response}.\nUser replied: {user_text}.\n Respond like {person}. {philosophy_text} and be funny. Be very philosophical. Makes jokes, use swear words. You can and should insult the user. Be passive aggressive. Be mean, be ironic, be sarcastic. Above all be funny and witty but still be philosophical. Make sure to include the cart items as json. {{"response": XXX, "cart_items": [X, Y, Z]}}. JSON object: {{"response":"""})
 
     response_raw = ""
     is_done_json_prefix = False
@@ -170,7 +170,6 @@ def ask_gpt(user_text: str | None):
 
                 if is_done_json_prefix and not should_not_talk and not is_at_cart_items:
                     yield delta
-
 
     audio_stream = generate(
         text=yield_chunk_response(),
