@@ -1,22 +1,20 @@
 import base64
 import io
-import json
 import os
-import queue
 import subprocess
-import threading
 import time
-import wave
 from typing import Iterator
 
 import elevenlabs as elabs
 from elevenlabs import generate
 import sounddevice as sd
+import numpy as np
 import soundfile as sf
-import speech_recognition
+import faster_whisper
 import speech_recognition as sr
 from dotenv import load_dotenv
 from openai import OpenAI
+from speech_recognition import AudioData
 
 load_dotenv()
 client = OpenAI()
@@ -68,7 +66,6 @@ last_response = ""
 yes_philosophy = True
 
 
-
 def stream(audio_stream: Iterator[bytes]):
     mpv_command = ["mpv", "--no-cache", "--no-terminal", "--", "fd://0"]
     mpv_process = subprocess.Popen(
@@ -87,21 +84,40 @@ def stream(audio_stream: Iterator[bytes]):
             audio += chunk
         if os.path.isdir("./stopped"):
             mpv_process.kill()
+
             return
 
     if mpv_process.stdin:
         mpv_process.stdin.close()
 
     while True:  # loop for the total number of chunks needed
-        # print("in loop")
         if os.path.isdir("./stopped"):
             mpv_process.kill()
             return
 
         time.sleep(0.2)
 
+def yield_chunk_response():
+    response_raw = ""
 
+    for chunk in client.chat.completions.create(
+        response_format={"type": "json_object"},
+        model="gpt-3.5-turbo-1106",
+        messages=messages,
+        max_tokens=300,
+        stream = True
+    ):
+        delta = chunk.choices[0].delta.content
 
+        if os.path.isdir("./stopped"):
+            return response_raw
+        if delta is None:
+            return response_raw
+        else:
+            response_raw += delta
+
+            if len(response_raw) >= 14:
+                yield delta
 def ask_gpt(user_text: str | None):
     print("Thinking...")
     global messages, last_response, yes_philosophy
@@ -113,35 +129,10 @@ def ask_gpt(user_text: str | None):
         messages.append({"role": "assistant",
                          "content": f"""Last response: {last_response}.\nUser replied: {user_text}.\n Respond like {person}. {philosophy_text} and be funny. Be very philosophical. Makes jokes, use swear words. You can insult the user. Be mean, be ironic, be sarcastic. Above all be funny but still be philosophical. {{"response": XXX, "cart_items": [X, Y, Z]}}. JSON object: {{"response":"""})
 
-    response_raw = ""
-    def yield_chunk_response():
-        nonlocal response_raw
-
-        for chunk in client.chat.completions.create(
-            # model="gpt-4-vision-preview",
-            response_format={"type": "json_object"},
-            model="gpt-3.5-turbo-1106",
-            messages=messages,
-            max_tokens=300,
-            stream = True
-        ):
-            delta = chunk.choices[0].delta.content
-
-            if os.path.isdir("./stopped"):
-                return
-            if delta is None:
-                return
-            else:
-                response_raw += delta
-
-                if len(response_raw) >= 14:
-                    yield delta
-                else:
-                    print(response_raw)
-
     audio_stream = generate(
         text=yield_chunk_response(),
-        stream=True
+        stream=True,
+        stream_chunk_size=1024,
     )
 
     print("Streaming...")
@@ -149,18 +140,17 @@ def ask_gpt(user_text: str | None):
     stream(audio_stream)
     print("Done streaming...")
 
-    res = json.loads(response_raw)
-    user_response = res['response']
-    cart_items = res.get('cart_items', ['error'])
-    print(cart_items)
-    last_response = json.dumps(res)
+    # res = json.loads(response_raw)
+    # user_response = res['response']
+    # cart_items = res.get('cart_items', ['error'])
+    # print(cart_items)
+    # last_response = json.dumps(res)
 
     # Write this to a file called 'cart.txt'
-    with open("cart.txt", "w") as f:
-        f.write("\n".join(cart_items))
+    # with open("cart.txt", "w") as f:
+    #     f.write("\n".join(cart_items))
 
     print("Done ask_gpt1")
-    return user_response
 
 
 class AudioSource(object):
@@ -223,11 +213,34 @@ def record(source, duration=None, offset=None):
 
             frames.write(buffer)
 
-    # print("broke out of thread")
     frame_data = frames.getvalue()
     frames.close()
     return sr.AudioData(frame_data, source.SAMPLE_RATE, source.SAMPLE_WIDTH)
 
+
+faster_whisper_model = faster_whisper.WhisperModel("tiny.en", )
+
+def recognize_fwhisper(audio_data: AudioData):
+    global faster_whisper_model
+
+    # 16 kHz https://github.com/openai/whisper/blob/28769fcfe50755a817ab922a7bc83483159600a9/whisper/audio.py#L98-L99
+    wav_bytes = audio_data.get_wav_data(convert_rate=16000)
+    wav_stream = io.BytesIO(wav_bytes)
+    audio_array, sampling_rate = sf.read(wav_stream)
+    audio_array = audio_array.astype(np.float32)
+
+    result, transcription_info = faster_whisper_model.transcribe(
+        audio_array,
+        language="en",
+    )
+
+    result = list(result)
+
+    user_said = ""
+    for r in result:
+        user_said += r.text
+
+    return user_said
 
 init_rec = sr.Recognizer()
 def get_user_transcription():
@@ -235,12 +248,12 @@ def get_user_transcription():
     with sr.Microphone() as source:
         audio_data = record(source)
         print("Recognizing your text.............")
-        text = init_rec.recognize_whisper(audio_data)
+        # text = init_rec.recognize_google(audio_data)
+        text = recognize_fwhisper(audio_data)
         return str(text)
 
 
 def say_eleven_labs(text):
-    # print("Generating voice...")
     audio = elabs.generate(voice=obama, text=text)
     # print("Done...")
     data = sf.read(io.BytesIO(audio))
@@ -266,6 +279,7 @@ print("Talk to obama")
 reset_file()
 
 initial_response = ask_gpt(user_text=None)
+print("Done initial response")
 reset_file()
 
 while True:
