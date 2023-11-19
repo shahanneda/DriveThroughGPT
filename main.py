@@ -53,6 +53,7 @@ folder = "images"
 image_path = f"{folder}/image.png"
 cam_port = 0
 delay = 5
+cart_items = []
 
 messages: list[dict[str, str]] = [
     {"role": "user", "content": f"""
@@ -104,7 +105,7 @@ def stream(audio_stream: Iterator[bytes]):
 
 def ask_gpt(user_text: str | None):
     print("Thinking...")
-    global messages, last_response, yes_philosophy
+    global messages, last_response, yes_philosophy, cart_items
     if user_text:
         philosophy_text = ""
         if yes_philosophy:
@@ -164,7 +165,11 @@ def ask_gpt(user_text: str | None):
     print("raw", response_raw)
     res = json.loads(response_raw)
     user_response = res['response']
-    cart_items = res.get('cart_items', ['error'])
+    print(user_response)
+
+
+    cart_items = res.get('cart_items', cart_items)
+
     print(cart_items)
     last_response = json.dumps(res)
 
