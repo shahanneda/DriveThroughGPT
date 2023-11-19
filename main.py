@@ -115,6 +115,8 @@ def ask_gpt(user_text: str | None):
     def yield_chunk_response():
         nonlocal response_raw
 
+        deactivated = False
+
         for chunk in client.chat.completions.create(
                 response_format={"type": "json_object"},
                 model="gpt-3.5-turbo-1106",
@@ -125,13 +127,13 @@ def ask_gpt(user_text: str | None):
             delta = chunk.choices[0].delta.content
 
             if os.path.isdir("./stopped"):
-                return response_raw
+                deactivated = True
             if delta is None:
-                return response_raw
+                return
             else:
                 response_raw += delta
 
-                if len(response_raw) >= 14:
+                if len(response_raw) >= 14 and not deactivated:
                     yield delta
 
     audio_stream = generate(
@@ -144,6 +146,7 @@ def ask_gpt(user_text: str | None):
     stream(audio_stream)
     print("Done streaming...")
 
+    print("raw", response_raw)
     res = json.loads(response_raw)
     user_response = res['response']
     cart_items = res.get('cart_items', ['error'])
@@ -262,7 +265,6 @@ def get_user_transcription():
 
 def say_eleven_labs(text):
     audio = elabs.generate(voice=obama, text=text)
-    # print("Done...")
     data = sf.read(io.BytesIO(audio))
     sd.play(*data)
 
