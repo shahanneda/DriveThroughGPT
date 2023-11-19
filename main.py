@@ -26,6 +26,8 @@ assert (eleven_labs_api_key)
 elabs.set_api_key(eleven_labs_api_key)
 response = elabs.voices()
 
+person = "Morgan Freeman"
+
 # obama = response.voices[0]
 obama = None
 for v in response.voices:
@@ -44,7 +46,7 @@ cam_port = 0
 delay = 5
 
 messages: list[dict[str, str]] = [
-    {"role": "user", "content": """You are a McDonald's drive-through operator and are having a conversation with a customer. Respond as if you were in a real conversation with the customer. Respond in the manner of MORGAN FREEMAN. \n Output format: {"response": XXX, "cart_items": []}.\n JSON object: \n"""}
+    {"role": "user", "content": f"""You are a McDonald's drive-through operator and are having a conversation with a customer. Respond as if you were in a real conversation with the customer. Respond in the manner of {person}. \n Output format: {{"response": XXX, "cart_items": []}}.\n JSON object: \n"""}
 ]
 
 
@@ -63,12 +65,12 @@ def ask_gpt(user_text: str | None):
     if user_text:
         philosophy_text = ""
         if yes_philosophy:
-            philosophy_text = "Add philosophical thoughts in the manner of Morgan Freeman."
+            philosophy_text = f"Add philosophical thoughts in the manner of {person}."
 
         # yes_philosophy = not yes_philosophy
 
         messages.append({"role": "assistant",
-                         "content": f"""Last response: {last_response}.\nUser replied: {user_text}.\n Respond like MORGAN FREEMAN. {philosophy_text} Be concise. {{"response": XXX, "cart_items": [X, Y, Z]}}. The JSON object: \n\n"""})
+                         "content": f"""Last response: {last_response}.\nUser replied: {user_text}.\n Respond like {person}. {philosophy_text} Be concise. {{"response": XXX, "cart_items": [X, Y, Z]}}. The JSON object: \n\n"""})
 
     # base64_image = encode_image(image_path)
     client = OpenAI()
