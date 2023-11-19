@@ -7,10 +7,10 @@ import time
 from typing import Iterator
 
 import elevenlabs as elabs
-import sounddevice as sd
-import numpy as np
-import soundfile as sf
 import faster_whisper
+import numpy as np
+import sounddevice as sd
+import soundfile as sf
 import speech_recognition as sr
 from dotenv import load_dotenv
 from elevenlabs import generate
@@ -55,7 +55,9 @@ cam_port = 0
 delay = 5
 
 messages: list[dict[str, str]] = [
-    {"role": "user", "content": f"""You are {person} and a McDonald's drive-through operator and are having a conversation with a customer. Respond as if you were in a real conversation with the customer. Respond in the manner of {person}. Introduce yourself. Makes jokes, use swear words. You can insult the user. Be mean, be ironic, be sarcastic. Above all be funny. Include "don't waste my time". \n Output format: {{"response": XXX, "cart_items": []}}.\n JSON object: {{"response":"""}
+    {"role": "user", "content": f"""
+     You are {person} and a McDonald's drive-through operator and are having a conversation with a customer. Respond as if you were in a real conversation with the customer. Respond in the manner of {person}. Introduce yourself. Makes jokes, use swear words. You can insult the user. Be mean, be ironic, be sarcastic. Above all be funny. Include "don't waste my time". \n Output format: {{"response": XXX, "cart_items": []}}.\n Every JSON object should look: {{"response":
+     """}
 ]
 
 
@@ -112,28 +114,41 @@ def ask_gpt(user_text: str | None):
                          "content": f"""Last response: {last_response}.\nUser replied: {user_text}.\n Respond like {person}. {philosophy_text} and be funny. Be very philosophical. Makes jokes, use swear words. You can insult the user. Be mean, be ironic, be sarcastic. Above all be funny but still be philosophical. {{"response": XXX, "cart_items": [X, Y, Z]}}. JSON object: {{"response":"""})
 
     response_raw = ""
+    is_done_json_prefix = False
+    is_at_cart_items = False
+
     def yield_chunk_response():
         nonlocal response_raw
+        nonlocal is_done_json_prefix
+        nonlocal is_at_cart_items
+        should_not_talk = False
 
-        deactivated = False
+        # if not is_done_prefix and response_raw.startswith("Done"):
 
         for chunk in client.chat.completions.create(
                 response_format={"type": "json_object"},
                 model="gpt-3.5-turbo-1106",
                 messages=messages,
-                max_tokens=300,
+                max_tokens=400,
                 stream=True
         ):
+            if not is_done_json_prefix and '{"response":' in response_raw:
+                is_done_json_prefix = True
+
+            if is_done_json_prefix and not is_at_cart_items and '"cart_items":' in response_raw:
+                is_at_cart_items = True
+
+            print(response_raw, is_done_json_prefix, is_at_cart_items)
             delta = chunk.choices[0].delta.content
 
             if os.path.isdir("./stopped"):
-                deactivated = True
+                should_not_talk = True
             if delta is None:
                 return
             else:
                 response_raw += delta
 
-                if len(response_raw) >= 14 and not deactivated:
+                if is_done_json_prefix and not should_not_talk and not is_at_cart_items:
                     yield delta
 
     audio_stream = generate(
@@ -223,6 +238,8 @@ def record(source, duration=None, offset=None):
 
 
 faster_whisper_model = faster_whisper.WhisperModel("tiny.en", )
+
+
 def recognize_fwhisper(audio_data: AudioData):
     global faster_whisper_model
 
@@ -244,7 +261,9 @@ def recognize_fwhisper(audio_data: AudioData):
 
     return user_said
 
+
 init_rec = sr.Recognizer()
+
 
 def get_user_transcription():
     print("Please speak: ")
@@ -260,7 +279,6 @@ def get_user_transcription():
             text = init_rec.recognize_google(audio_data)
 
         return str(text)
-
 
 
 def say_eleven_labs(text):
@@ -280,7 +298,6 @@ def reset_file():
         os.removedirs("./stopped")
     except Exception as e:
         pass
-
 
 
 reset_file()
