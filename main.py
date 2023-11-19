@@ -22,6 +22,7 @@ client = OpenAI()
 
 eleven_labs_api_key = os.environ.get('ELEVEN_LABS_API_KEY')
 wit_api_key = os.environ.get("WIT_API_KEY")
+use_whisper = os.environ.get("USE_WHISPER", "False") == "True"
 
 # Setup eleven labs
 assert (eleven_labs_api_key)
@@ -43,8 +44,8 @@ for v in response.voices:
         obama = v
 if obama is None:
     obama = response.voices[0]
-
 assert (obama)
+
 print(f"Using {obama.name} voice")
 
 client = OpenAI()
@@ -140,7 +141,6 @@ def ask_gpt(user_text: str | None):
     )
 
     print("Streaming...")
-
     stream(audio_stream)
     print("Done streaming...")
 
@@ -220,7 +220,6 @@ def record(source, duration=None, offset=None):
 
 
 faster_whisper_model = faster_whisper.WhisperModel("tiny.en", )
-
 def recognize_fwhisper(audio_data: AudioData):
     global faster_whisper_model
 
@@ -236,7 +235,6 @@ def recognize_fwhisper(audio_data: AudioData):
     )
 
     result = list(result)
-
     user_said = ""
     for r in result:
         user_said += r.text
@@ -245,15 +243,21 @@ def recognize_fwhisper(audio_data: AudioData):
 
 init_rec = sr.Recognizer()
 
-
 def get_user_transcription():
     print("Please speak: ")
     with sr.Microphone() as source:
         audio_data = record(source)
         print("Recognizing your text.............")
-        # text = init_rec.recognize_google(audio_data)
-        text = recognize_fwhisper(audio_data)
+
+        if use_whisper:
+            print("using whiser", use_whisper)
+            text = recognize_fwhisper(audio_data)
+        else:
+            print("using normal")
+            text = init_rec.recognize_google(audio_data)
+
         return str(text)
+
 
 
 def say_eleven_labs(text):
@@ -276,11 +280,8 @@ def reset_file():
         pass
 
 
-reset_file()
 
-print("Talk to obama")
 reset_file()
-
 initial_response = ask_gpt(user_text=None)
 print("Done initial response")
 reset_file()
