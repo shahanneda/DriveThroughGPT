@@ -46,7 +46,7 @@ cam_port = 0
 delay = 5
 
 messages: list[dict[str, str]] = [
-    {"role": "user", "content": f"""You are a McDonald's drive-through operator and are having a conversation with a customer. Respond as if you were in a real conversation with the customer. Respond in the manner of {person}. \n Output format: {{"response": XXX, "cart_items": []}}.\n JSON object: \n"""}
+    {"role": "user", "content": f"""You are a McDonald's drive-through operator and are having a conversation with a customer. Respond as if you were in a real conversation with the customer. Respond in the manner of {person}. Introduce yourself. Makes jokes, use swear words. You can insult the user. Be mean, be ironic, be sarcastic. Above all be funny. \n Output format: {{"response": XXX, "cart_items": []}}.\n JSON object: \n"""}
 ]
 
 
@@ -65,12 +65,12 @@ def ask_gpt(user_text: str | None):
     if user_text:
         philosophy_text = ""
         if yes_philosophy:
-            philosophy_text = f"Add philosophical thoughts in the manner of {person}."
+            philosophy_text = f"Respond jokingly in the style of {person}."
 
         # yes_philosophy = not yes_philosophy
 
         messages.append({"role": "assistant",
-                         "content": f"""Last response: {last_response}.\nUser replied: {user_text}.\n Respond like {person}. {philosophy_text} Be concise. {{"response": XXX, "cart_items": [X, Y, Z]}}. The JSON object: \n\n"""})
+                         "content": f"""Last response: {last_response}.\nUser replied: {user_text}.\n Respond like {person}. {philosophy_text} and be funny. Makes jokes, use swear words. You can insult the user. Be mean, be ironic, be sarcastic. Above all be funny. {{"response": XXX, "cart_items": [X, Y, Z]}}. The JSON object: \n\n"""})
 
     # base64_image = encode_image(image_path)
     client = OpenAI()
