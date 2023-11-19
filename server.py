@@ -33,12 +33,12 @@ app.add_middleware(
 cached_images = {}
 
 
-def get_image(name):
+def get_image(name, extra_prompt=""):
     if name in cached_images:
         return cached_images[name]
 
     _search_params = {
-        'q': name,
+        'q': name + extra_prompt,
         'num': 1,
     }
     gis.search(search_params=_search_params)
@@ -46,6 +46,19 @@ def get_image(name):
         cached_images[name] = image.url
         return image.url
 
+
+def get_person():
+    with open("person.txt", "r") as file:
+        person = file.readline().strip()
+        assert person
+        return person
+
+
+@app.get("/person")
+async def read_cart():
+    person = get_person()
+    url = get_image(person + " wearing a headset")
+    return {"name": get_person(), "url": url}
 
 @app.get("/cart")
 async def read_cart():

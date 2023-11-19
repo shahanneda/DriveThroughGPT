@@ -26,7 +26,12 @@ assert (eleven_labs_api_key)
 elabs.set_api_key(eleven_labs_api_key)
 response = elabs.voices()
 
-person = "Morgan Freeman"
+with open("person.txt", "r") as file:
+    person = file.readline().strip()
+    assert person
+
+# person = "Morgan Freeman"
+# person = "Elon Musk"
 
 # obama = response.voices[0]
 obama = None
@@ -70,7 +75,7 @@ def ask_gpt(user_text: str | None):
         # yes_philosophy = not yes_philosophy
 
         messages.append({"role": "assistant",
-                         "content": f"""Last response: {last_response}.\nUser replied: {user_text}.\n Respond like {person}. {philosophy_text} and be funny. Makes jokes, use swear words. You can insult the user. Be mean, be ironic, be sarcastic. Above all be funny. {{"response": XXX, "cart_items": [X, Y, Z]}}. The JSON object: \n\n"""})
+                         "content": f"""Last response: {last_response}.\nUser replied: {user_text}.\n Respond like {person}. {philosophy_text} and be funny. Be very philosophical. Makes jokes, use swear words. You can insult the user. Be mean, be ironic, be sarcastic. Above all be funny but still be philosophical. {{"response": XXX, "cart_items": [X, Y, Z]}}. The JSON object: \n\n"""})
 
     # base64_image = encode_image(image_path)
     client = OpenAI()

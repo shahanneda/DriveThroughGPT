@@ -8,6 +8,11 @@ const getCart = async () => {
   return data.items;
 };
 
+const getPerson = async () => {
+  const { data } = await axios.get("http://localhost:8000/person");
+  return data;
+};
+
 interface Item {
   name: string;
   url: string;
@@ -15,6 +20,7 @@ interface Item {
 
 export default function Home() {
   const [cart, setCart] = useState<string[]>([]);
+  const [person, setPerson] = useState<Item>();
 
   // Poll every second for the cart
   useEffect(() => {
@@ -24,6 +30,14 @@ export default function Home() {
     }, 1000);
     return () => clearInterval(interval);
   });
+  useEffect(() => {
+    (async () => {
+      console.log("getting person");
+      const person = await getPerson();
+      console.log(person);
+      setPerson(person);
+    })();
+  }, []);
 
   const Card = ({ item }: { item: Item }) => {
     return (
@@ -37,7 +51,11 @@ export default function Home() {
   return (
     <main>
       <div className="text-center mt-8 items-center">
-        <h1 className="font-bold text-xl">Cart:</h1>
+        <div className="mt-8 space-y-2 self-center flex flex-col items-center">
+          {person ? <img src={person.url} alt="item" width={250} /> : undefined}
+        </div>
+
+        <h1 className="font-bold text-xl mt-2">Cart:</h1>
         <div className="mt-8 space-y-2 self-center flex flex-col items-center">
           {cart.map((item) => (
             <Card key={item} item={item} />
