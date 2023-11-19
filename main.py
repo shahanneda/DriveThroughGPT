@@ -31,7 +31,7 @@ person = "Morgan Freeman"
 # obama = response.voices[0]
 obama = None
 for v in response.voices:
-    if v.name == "Morgan Freeman":
+    if v.name == person:
         obama = v
 if obama is None:
     obama = response.voices[0]
