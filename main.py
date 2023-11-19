@@ -35,7 +35,7 @@ with open("person.txt", "r") as file:
 
 # person = "Morgan Freeman"
 # person = "Elon Musk"
-person = "Donald Trump"
+# person = "Donald Trump"
 
 # obama = response.voices[0]
 obama = None
