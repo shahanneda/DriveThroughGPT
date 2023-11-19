@@ -6,13 +6,13 @@ import time
 from typing import Iterator
 
 import elevenlabs as elabs
-from elevenlabs import generate
 import sounddevice as sd
 import numpy as np
 import soundfile as sf
 import faster_whisper
 import speech_recognition as sr
 from dotenv import load_dotenv
+from elevenlabs import generate
 from openai import OpenAI
 from speech_recognition import AudioData
 
@@ -33,7 +33,7 @@ with open("person.txt", "r") as file:
 
 # person = "Morgan Freeman"
 # person = "Elon Musk"
-person = "Donald Trump"
+# person = "Donald Trump"
 
 # obama = response.voices[0]
 obama = None
@@ -132,7 +132,7 @@ def ask_gpt(user_text: str | None):
     audio_stream = generate(
         text=yield_chunk_response(),
         stream=True,
-        stream_chunk_size=1024,
+        voice=obama,
     )
 
     print("Streaming...")
@@ -164,16 +164,12 @@ class AudioSource(object):
         raise NotImplementedError("this is an abstract class")
 
 
-i = 0
-
-
 def record(source, duration=None, offset=None):
-    global i
     """
-		Records up to ``duration`` seconds of audio from ``source`` (an ``AudioSource`` instance) starting at ``offset`` (or at the beginning if not specified) into an ``AudioData`` instance, which it returns.
+                Records up to ``duration`` seconds of audio from ``source`` (an ``AudioSource`` instance) starting at ``offset`` (or at the beginning if not specified) into an ``AudioData`` instance, which it returns.
 
-		If ``duration`` is not specified, then it will record until there is no more audio input.
-		"""
+                If ``duration`` is not specified, then it will record until there is no more audio input.
+                """
     # assert isinstance(source, AudioSource), "Source must be an audio source"
     # assert source.stream is not None, "Audio source must be entered before recording, see documentation for ``AudioSource``; are you using ``source`` outside of a ``with`` statement?"
 
@@ -243,6 +239,8 @@ def recognize_fwhisper(audio_data: AudioData):
     return user_said
 
 init_rec = sr.Recognizer()
+
+
 def get_user_transcription():
     print("Please speak: ")
     with sr.Microphone() as source:
